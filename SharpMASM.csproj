@@ -9,4 +9,11 @@
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
+  <!-- Add this ItemGroup to copy folders to output directory -->
+  <ItemGroup>
+    <None Include="root\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

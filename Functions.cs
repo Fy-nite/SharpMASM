@@ -11,7 +11,7 @@ namespace SharpMASM
         public static void Move()
         {
 
-            // check register maps
+            
             
         }
     }
