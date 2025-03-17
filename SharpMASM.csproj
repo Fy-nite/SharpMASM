@@ -15,5 +15,18 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.9.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="root\libs\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="SharpStyle">
+      <HintPath>root\libs\SharpStyle.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 
 </Project>

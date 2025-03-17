@@ -1,13 +1,145 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
+using System.IO;
 
-namespace SharpMasm;
-public class Entry
+using SharpMASM.Core;
+using static SharpMASM.Core.Core_Interpreter;
+
+
+namespace SharpMASM
 {
+    public class Entry
+    { 
+        /// <summary>
+        /// Main entry point for the application
+        /// </summary>
+        /// <param name="args"></param>
+        public static void Main(string[] args)
+        {
+            var cmdArgs = CmdArgs.Parse(args);
 
-    public static void Main(string[] args)
-    {
-        
-    }
+            if (cmdArgs.StartServer)
+            {
+                // Use SimpleHttpServer
+                StartSimpleServer();
+
+            }
+            else
+            {
+                // Parse command line arguments
+                CmdArgs.Instance = CmdArgs.Parse(args);
+
+                // Check if a file was specified
+                if (string.IsNullOrEmpty(CmdArgs.GetInstance().FileName))
+                {
+                    Console.WriteLine("Usage: ./masm <filename>");
+                    return;
+                }
+
+                try
+                {
+                    // Read the file
+                    if (!File.Exists(CmdArgs.GetInstance().FileName))
+                    {
+                        Console.WriteLine($"File not found: {CmdArgs.GetInstance().FileName}");
+                        return;
+                    }
+
+                    string[] lines = File.ReadAllLines(CmdArgs.GetInstance().FileName);
+
+                    // Initialize Common and Instructions classes
+                    Common.Instance = new Common();
+                    Common.InstructionInstance = new Instructions();
+
+                    // Initialize the memory-mapped file
+                    Internal.MappedMemoryFile.GetInstance(Common.MappedFile);
+
+                    // Parse the instructions
+                    Parsing.ParseInstructions(lines);
+
+                    // Print instructions if in verbose mode
+                    if (CmdArgs.GetInstance().Verbose || CmdArgs.GetInstance().VeryVerbose)
+                    {
+                        Instructions.PrintInstructions_plus_DebuggingInfo();
+                    }
+
+                    Common.VerbosePrint("Program parsed successfully. Ready for execution.");
+
+                    // Execute the program - instruction pointer is reset within Interpret method
+                    Console.WriteLine("Program loaded successfully.");
+                    Interpret(Instructions.GetInstance());
+
+                }
+                catch (FileNotFoundException)
+                {
+                    Console.WriteLine($"File not found: {CmdArgs.GetInstance().FileName}");
+                }
+                catch (Core.Exceptions.MASMException ex)
+                {
+                    // Exception handling is already done in the constructor
+                    if (CmdArgs.GetInstance().VeryVerbose)
+                    {
+                        Console.WriteLine(ex.ToString());
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error: {ex.Message}");
+                    if (CmdArgs.GetInstance().VeryVerbose)
+                    {
+                        Console.WriteLine(ex.StackTrace);
+                    }
+                }
+            }
+        }
+
+        // Replace StartServer with a method that uses SimpleHttpServer
+        public static void StartSimpleServer()
+        {
+            string rootDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "root");
+            
+            if (!Directory.Exists(rootDirectory))
+            {
+                Console.WriteLine($"Creating documentation directory: {rootDirectory}");
+                Directory.CreateDirectory(rootDirectory);
+                
+                // Create a simple index.html if no content exists
+                string indexPath = Path.Combine(rootDirectory, "index.html");
+                if (!File.Exists(indexPath))
+                {
+                    File.WriteAllText(indexPath, 
+                        "<html><body><h1>SharpMASM Documentation</h1>" +
+                        "<p>Documentation server is running. Add HTML files to the 'root' directory.</p></body></html>");
+                }
+            }
+
+            Console.WriteLine("Starting documentation server...");
+            var server = new SimpleHttpServer(rootDirectory);
+
+            try
+            {
+                server.Start();
+                Console.WriteLine("Server is running. Press Ctrl+C to stop.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error starting server: {ex.Message}");
+                return;
+            }
+
+            // Handle graceful shutdown
+            Console.CancelKeyPress += (sender, e) => {
+               // e.Cancel = true; // Prevent the process from terminating immediately
+                server.Stop();
+                Console.WriteLine("Server stopped.");
+            };
+
+            // Keep the application running
+            while (true)
+            {
+                Thread.Sleep(1000);
+            }
+        }
+
+        // Remove the CreateHostBuilder method as it's no longer needed
+   }
 }
