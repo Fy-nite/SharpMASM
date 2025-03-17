@@ -196,10 +196,43 @@ namespace SharpMASM.Internal
                 return sb.ToString();
 
             }
+            // could not be a register and instead a number or memory address
+            else if (startingRegister.StartsWith("$"))
+            {
+                // Parse memory address without the $ sign
+                if (long.TryParse(startingRegister.Substring(1), out long address))
+                {
+                    // Ensure address is valid (convert to byte position)
+                    long bytePosition = address * sizeof(long);
+                    if (bytePosition >= 0 && bytePosition < _fileSize)
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        while (Instance.ReadLong(bytePosition) != 0)
+                        {
+                            sb.Append((char)Instance.ReadLong(bytePosition));
+                            bytePosition++;
+                        }
+                        return sb.ToString();
+                    }
+                    else
+                    {
+                        throw new MASMException($"Memory address out of range: {startingRegister} (byte position {bytePosition}, file size {_fileSize})");
+                    }
+                }
+                else
+                {
+                    throw new MASMException($"Invalid memory address format: {startingRegister}");
+                }
+            }
+            else if (long.TryParse(startingRegister, out long value))
+            {
+                return value.ToString();
+            }
             else
             {
-                throw new MASMException("Invalid register: " + startingRegister);
+                throw new MASMException($"Invalid register or memory address: {startingRegister}");
             }
+           
             
         }
 

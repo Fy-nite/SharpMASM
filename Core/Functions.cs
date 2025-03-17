@@ -56,9 +56,9 @@ namespace SharpMASM.Core
             }
         }
 
-        public static void Mov()
+        // Modify each function to accept the instruction as a parameter
+        public static void Mov(instruction instruction)
         {
-            var instruction = Instructions.GetInstance().GetInstruction();
             if (instruction.args.Length != 2)
             {
                 throw new MASMException("Invalid number of arguments for mov, Expected 2 min/max but didn't get enough");
@@ -152,9 +152,8 @@ namespace SharpMASM.Core
                 }
             }
         }
-        public static void Add()
+        public static void Add(instruction instruction)
         {
-            var instruction = Instructions.GetInstance().GetInstruction();
             if (instruction.args.Length != 2)
             {
                 throw new MASMException("Invalid number of arguments for add, Expected 2 min/max but didn't get enough");
@@ -233,10 +232,8 @@ namespace SharpMASM.Core
                 }
             }
         }
-        public static void Out()
+        public static void Out(instruction instruction)
         {
-            // takes in 2 arguments, the first argument is the FileDescriptor where 1 is stdout and 2 is stderr and the rest is something else, the seccond argument is ether memory which will print till \0 or a number which will print the number ether from a register or the number itself
-            var instruction = Instructions.GetInstance().GetInstruction();
             if (instruction.args.Length != 2)
             {
                 throw new MASMException("Invalid number of arguments for out, Expected 2 min/max but didn't get enough");
@@ -245,58 +242,184 @@ namespace SharpMASM.Core
             string arg1 = instruction.args[0];
             // get the second argument
             string arg2 = instruction.args[1];
-            // check if the first argument is a number
-
-            if (long.TryParse(arg1, out long value))
+            
+            // Get the output port (first argument)
+            long port;
+            if (arg1.StartsWith("$"))
             {
-                // check if the second argument is a memory address
-                if (arg2.StartsWith("$"))
+                string addressOrRegister = arg1.Substring(1);
+                if (Common.Registers.Contains(addressOrRegister))
                 {
-                    // get the value of the memory address
-                    long value2 = Long_memory.Read(arg2);
-                    // write the value to the first argument
-                    Console.Write(value2);
+                    // Register-based addressing: $RAX means "use value in RAX as the address"
+                    port = Long_memory.Read(addressOrRegister);
+                }
+                else if (long.TryParse(addressOrRegister, out long address))
+                {
+                    // Direct memory addressing
+                    port = Long_memory.Read(arg1);
                 }
                 else
                 {
-                    // check if the second argument is a number
-                    if (long.TryParse(arg2, out long value2))
+                    throw new MASMException($"Invalid memory address format: {arg1}");
+                }
+            }
+            else if (Common.Registers.Contains(arg1))
+            {
+                port = Long_memory.Read(arg1);
+            }
+            else if (long.TryParse(arg1, out port))
+            {
+                // Direct value
+            }
+            else
+            {
+                throw new MASMException("Invalid first argument for out, Expected a register, memory address or number");
+            }
+            
+            // Check if we're outputting a string from memory
+            if (arg2.StartsWith("$"))
+            {
+                long startAddress;
+                string addressOrRegister = arg2.Substring(1);
+                
+                if (Common.Registers.Contains(addressOrRegister))
+                {
+                    // Register-based addressing: $RAX means "use value in RAX as the address"
+                    startAddress = Long_memory.Read(addressOrRegister);
+                }
+                else if (long.TryParse(addressOrRegister, out startAddress))
+                {
+                    // Direct memory addressing
+                }
+                else
+                {
+                    throw new MASMException($"Invalid memory address format: {arg2}");
+                }
+                
+                // Read string from memory until null terminator (0)
+                StringBuilder sb = new StringBuilder();
+                long currentAddress = startAddress;
+                long charValue;
+                const int MAX_STRING_LENGTH = 10000; // Safety limit
+                int charCount = 0;
+                
+                while (charCount < MAX_STRING_LENGTH)
+                {
+                    charValue = Long_memory.ReadLong(currentAddress * sizeof(long));
+                    if (charValue == 0) break; // Null terminator
+                    
+                    sb.Append((char)charValue);
+                    currentAddress++;
+                    charCount++;
+                }
+                
+                // Output the string
+                if (port == 1)
+                {
+                    Console.Write(sb.ToString());
+                }
+                else if (port == 2)
+                {
+                    Console.Error.Write(sb.ToString());
+                }
+                else
+                {
+                    throw new MASMException($"Invalid port number for OUT: {port}");
+                }
+            }
+            else
+            {
+                // Handle single character output (original behavior)
+                long outputValue;
+                if (Common.Registers.Contains(arg2))
+                {
+                    outputValue = Long_memory.Read(arg2);
+                }
+                else if (long.TryParse(arg2, out outputValue))
+                {
+                    // Direct value
+                }
+                else
+                {
+                    throw new MASMException("Invalid second argument for out, Expected a register, memory address or number");
+                }
+                
+                if (CmdArgs.GetInstance().VeryVerbose)
+                {
+                    Console.WriteLine($"OUT instruction executing with port {port} and value {outputValue}");
+                }
+                
+                if (port == 1)
+                {
+                    Console.Write((char)outputValue);
+                }
+                else if (port == 2)
+                {
+                    Console.Error.Write((char)outputValue);
+                }
+                else
+                {
+                    throw new MASMException($"Invalid port number for OUT: {port}");
+                }
+            }
+        }
+        public static void Sub(instruction instruction)
+        {
+            if (instruction.args.Length != 2)
+            {
+                throw new MASMException("Invalid number of arguments for sub, Expected 2 min/max but didn't get enough");
+            }
+            // get the first argument
+            string arg1 = instruction.args[0];
+            // get the second argument
+            string arg2 = instruction.args[1];
+            // check if the first argument is a register
+            if (Common.Registers.Contains(arg1))
+            {
+                // check if the second argument is a register
+                if (Common.Registers.Contains(arg2))
+                {
+                    // get the value of the second argument
+                    long value = Long_memory.Read(arg2);
+                    // add the value to the first argument
+                    Long_memory.Write(arg1, Long_memory.Read(arg1) - value);
+                }
+                else
+                {
+                    // check if the second argument is a memory address
+                    if (arg2.StartsWith("$"))
                     {
-                        // write the value to the first argument
-                        Console.Write(value2);
+                        // get the value of the memory address
+                        long value = Long_memory.Read(arg2);
+                        // add the value to the first argument
+                        Long_memory.Write(arg1, Long_memory.Read(arg1) - value);
                     }
                     else
                     {
-                        throw new MASMException("Invalid argument for out, Expected a memory address or number but got something else");
+                        // check if the second argument is a number
+                        if (long.TryParse(arg2, out long value))
+                        {
+                            // add the value to the first argument
+                            Long_memory.Write(arg1, Long_memory.Read(arg1) - value);
+                        }
+                        else
+                        {
+                            throw new MASMException("Invalid argument for sub, Expected a register, memory address or number but got something else");
+                        }
                     }
                 }
             }
             else
             {
-                throw new MASMException("Invalid argument for out, Expected a memory address or number but got something else");
-            }
-        }
-        public static void Sub()
-        {
-            {
-                var instruction = Instructions.GetInstance().GetInstruction();
-                if (instruction.args.Length != 2)
-                {
-                    throw new MASMException("Invalid number of arguments for sub, Expected 2 min/max but didn't get enough");
-                }
-                // get the first argument
-                string arg1 = instruction.args[0];
-                // get the second argument
-                string arg2 = instruction.args[1];
-                // check if the first argument is a register
-                if (Common.Registers.Contains(arg1))
+                // check if the first argument is a memory address
+                if (arg1.StartsWith("$"))
                 {
                     // check if the second argument is a register
                     if (Common.Registers.Contains(arg2))
                     {
                         // get the value of the second argument
                         long value = Long_memory.Read(arg2);
-                        // add the value to the first argument
+                        // add the value to the memory address
                         Long_memory.Write(arg1, Long_memory.Read(arg1) - value);
                     }
                     else
@@ -306,63 +429,22 @@ namespace SharpMASM.Core
                         {
                             // get the value of the memory address
                             long value = Long_memory.Read(arg2);
-                            // add the value to the first argument
-                            Long_memory.Write(arg1, Long_memory.Read(arg1) - value);
-                        }
-                        else
-                        {
-                            // check if the second argument is a number
-                            if (long.TryParse(arg2, out long value))
-                            {
-                                // add the value to the first argument
-                                Long_memory.Write(arg1, Long_memory.Read(arg1) - value);
-                            }
-                            else
-                            {
-                                throw new MASMException("Invalid argument for sub, Expected a register, memory address or number but got something else");
-                            }
+                            // add the value to
                         }
                     }
                 }
                 else
                 {
-                    // check if the first argument is a memory address
-                    if (arg1.StartsWith("$"))
-                    {
-                        // check if the second argument is a register
-                        if (Common.Registers.Contains(arg2))
-                        {
-                            // get the value of the second argument
-                            long value = Long_memory.Read(arg2);
-                            // add the value to the memory address
-                            Long_memory.Write(arg1, Long_memory.Read(arg1) - value);
-                        }
-                        else
-                        {
-                            // check if the second argument is a memory address
-                            if (arg2.StartsWith("$"))
-                            {
-                                // get the value of the memory address
-                                long value = Long_memory.Read(arg2);
-                                // add the value to
-                            }
-                        }
-                    }
-                    else
-                    {
-                        throw new MASMException("Invalid argument for sub, Expected a register, memory address or number but got something else");
+                    throw new MASMException("Invalid argument for sub, Expected a register, memory address or number but got something else");
 
-                    }
                 }
             }
         }
-        public static void DB()
+        public static void DB(instruction instruction)
         {
-            var instruction = Instructions.GetInstance().GetInstruction();
-
-            if (instruction.args.Length < 1)
+            if (instruction.args.Length < 2)
             {
-                throw new MASMException("Invalid number of arguments for DB, expected at least a memory address");
+                throw new MASMException("Invalid number of arguments for DB, expected at least a memory address and a value");
             }
             
             // get the first argument (memory address)
@@ -373,11 +455,6 @@ namespace SharpMASM.Core
                 throw new MASMException($"Invalid argument for DB, expected a memory address but got {arg1}");
             }
             
-            if (instruction.args.Length < 2)
-            {
-                throw new MASMException("Missing second argument for DB, expected a string or number value");
-            }
-             
             // get the second argument (data)
             string arg2 = instruction.args[1];
             
@@ -434,12 +511,11 @@ namespace SharpMASM.Core
             }
         }
 
-        public static void Cmp()
+        public static void Cmp(instruction instruction)
         {
             // Reset comparison flags
             ComparisonFlags.Reset();
             
-            var instruction = Instructions.GetInstance().GetInstruction();
             if (instruction.args.Length != 2)
             {
                 throw new MASMException("Invalid number of arguments for CMP, expected 2");
@@ -482,9 +558,8 @@ namespace SharpMASM.Core
         }
         
         // Add placeholder methods for other instructions mentioned in v1instructions.md
-        public static void Mul()
+        public static void Mul(instruction instruction)
         {
-            var instruction = Instructions.GetInstance().GetInstruction();
             if (instruction.args.Length != 2)
             {
                 throw new MASMException("Invalid number of arguments for MUL, expected 2");
@@ -497,9 +572,8 @@ namespace SharpMASM.Core
             Long_memory.Write(dest, value1 * value2);
         }
         
-        public static void Div()
+        public static void Div(instruction instruction)
         {
-            var instruction = Instructions.GetInstance().GetInstruction();
             if (instruction.args.Length != 2)
             {
                 throw new MASMException("Invalid number of arguments for DIV, expected 2");
@@ -517,9 +591,8 @@ namespace SharpMASM.Core
             Long_memory.Write(dest, value1 / value2);
         }
         
-        public static void And()
+        public static void And(instruction instruction)
         {
-            var instruction = Instructions.GetInstance().GetInstruction();
             if (instruction.args.Length != 2)
             {
                 throw new MASMException("Invalid number of arguments for AND, expected 2");
@@ -532,9 +605,8 @@ namespace SharpMASM.Core
             Long_memory.Write(dest, value1 & value2);
         }
         
-        public static void Or()
+        public static void Or(instruction instruction)
         {
-            var instruction = Instructions.GetInstance().GetInstruction();
             if (instruction.args.Length != 2)
             {
                 throw new MASMException("Invalid number of arguments for OR, expected 2");
@@ -547,9 +619,8 @@ namespace SharpMASM.Core
             Long_memory.Write(dest, value1 | value2);
         }
         
-        public static void Xor()
+        public static void Xor(instruction instruction)
         {
-            var instruction = Instructions.GetInstance().GetInstruction();
             if (instruction.args.Length != 2)
             {
                 throw new MASMException("Invalid number of arguments for XOR, expected 2");
@@ -562,9 +633,8 @@ namespace SharpMASM.Core
             Long_memory.Write(dest, value1 ^ value2);
         }
         
-        public static void Not()
+        public static void Not(instruction instruction)
         {
-            var instruction = Instructions.GetInstance().GetInstruction();
             if (instruction.args.Length != 1)
             {
                 throw new MASMException("Invalid number of arguments for NOT, expected 1");
@@ -576,9 +646,8 @@ namespace SharpMASM.Core
             Long_memory.Write(dest, ~value);
         }
         
-        public static void Inc()
+        public static void Inc(instruction instruction)
         {
-            var instruction = Instructions.GetInstance().GetInstruction();
             if (instruction.args.Length != 1)
             {
                 throw new MASMException("Invalid number of arguments for INC, expected 1");
@@ -590,9 +659,8 @@ namespace SharpMASM.Core
             Long_memory.Write(dest, value + 1);
         }
         
-        public static void Dec()
+        public static void Dec(instruction instruction)
         {
-            var instruction = Instructions.GetInstance().GetInstruction();
             if (instruction.args.Length != 1)
             {
                 throw new MASMException("Invalid number of arguments for DEC, expected 1");
@@ -604,9 +672,8 @@ namespace SharpMASM.Core
             Long_memory.Write(dest, value - 1);
         }
         
-        public static void Push()
+        public static void Push(instruction instruction)
         {
-            var instruction = Instructions.GetInstance().GetInstruction();
             if (instruction.args.Length != 1)
             {
                 throw new MASMException("Invalid number of arguments for PUSH, expected 1");
@@ -623,9 +690,8 @@ namespace SharpMASM.Core
             Long_memory.Write("RSP", rsp - 8); // Assuming 64-bit values
         }
         
-        public static void Pop()
+        public static void Pop(instruction instruction)
         {
-            var instruction = Instructions.GetInstance().GetInstruction();
             if (instruction.args.Length != 1)
             {
                 throw new MASMException("Invalid number of arguments for POP, expected 1");
@@ -646,9 +712,8 @@ namespace SharpMASM.Core
             Long_memory.Write("RSP", rsp);
         }
         
-        public static void Cout()
+        public static void Cout(instruction instruction)
         {
-            var instruction = Instructions.GetInstance().GetInstruction();
             if (instruction.args.Length != 2)
             {
                 throw new MASMException("Invalid number of arguments for COUT, expected 2");

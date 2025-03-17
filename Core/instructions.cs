@@ -31,6 +31,12 @@ namespace SharpMASM.Core
                 if (CmdArgs.GetInstance().VeryVerbose)
                 {
                     Console.WriteLine($"Starting execution from 'main' label at position {mainPosition}");
+                    // Print which instruction is at this position for debugging
+                    if (mainPosition < Instructions.instructions.Count)
+                    {
+                        var mainInstr = Instructions.instructions[(int)mainPosition];
+                        Console.WriteLine($"Instruction at main position: {mainInstr.name} {string.Join(" ", mainInstr.args)}");
+                    }
                 }
                 Instructions.GetInstance().instructionPointer = mainPosition;
             }
@@ -42,63 +48,65 @@ namespace SharpMASM.Core
             // Execute instructions
             while (Instructions.GetInstance().instructionPointer < Instructions.GetInstance().instructionCount)
             {
+                long currentPos = Instructions.GetInstance().instructionPointer;
                 instruction i = Instructions.GetInstance().GetInstruction();
                 if (CmdArgs.GetInstance().Verbose || CmdArgs.GetInstance().VeryVerbose)
                 {
-                    Console.WriteLine("Executing instruction: " + i.name);
+                    Console.WriteLine($"Executing instruction at position {currentPos}: {i.name} {string.Join(" ", i.args)}");
                 }
+                
                 switch (i.name.ToLower())
                 {
                     case "mov":
-                        Functions.Mov();
+                        Functions.Mov(i);
                         break;
                     case "add":
-                        Functions.Add();
+                        Functions.Add(i);
                         break;
                     case "sub":
-                        Functions.Sub();
+                        Functions.Sub(i);
                         break;
                     case "mul":
-                        Functions.Mul();
+                        Functions.Mul(i);
                         break;
                     case "div":
-                        Functions.Div();
+                        Functions.Div(i);
                         break;
                     case "and":
-                        Functions.And();
+                        Functions.And(i);
                         break;
                     case "or":
-                        Functions.Or();
+                        Functions.Or(i);
                         break;
                     case "xor":
-                        Functions.Xor();
+                        Functions.Xor(i);
                         break;
                     case "not":
-                        Functions.Not();
+                        Functions.Not(i);
                         break;
                     case "db":
-                        Functions.DB();
+                        Functions.DB(i);
                         break;
                     case "out":
-                        Functions.Out();
+                        Functions.Out(i);
                         break;
                     case "cout":
-                        Functions.Cout();
+                        Functions.Cout(i);
                         break;
                     case "push":
-                        Functions.Push();
+                        Functions.Push(i);
                         break;
                     case "pop":
-                        Functions.Pop();
+                        Functions.Pop(i);
                         break;
                     case "inc":
-                        Functions.Inc();
+                        Functions.Inc(i);
                         break;
                     case "dec":
-                        Functions.Dec();
+                        Functions.Dec(i);
                         break;
                     case "cmp":
-                        Functions.Cmp();
+                        Functions.Cmp(i);
                         break;
                     case "je":
                         JumpIfEqual(i);
@@ -336,7 +344,12 @@ namespace SharpMASM.Core
                 {
                     return new instruction("HLT", new string[] { });
                 }
-                return instructions[(int)instructionPointer++];
+                // Store the current instruction
+                instruction instr = instructions[(int)instructionPointer];
+                // Increment the pointer for next time
+                instructionPointer++;
+                
+                return instr;
             }
 
             public static Instructions GetInstance()

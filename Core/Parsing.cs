@@ -302,11 +302,24 @@ namespace SharpMASM.Core
             
             if (CmdArgs.GetInstance().VeryVerbose)
             {
-                Console.WriteLine("Collected labels:");
+                Console.WriteLine("\nCollected labels:");
                 foreach (var label in Instructions.Labels)
                 {
                     Console.WriteLine($"{label.Key}: {label.Value}");
+                    if (label.Value < Instructions.instructions.Count)
+                    {
+                        var instr = Instructions.instructions[(int)label.Value];
+                        Console.WriteLine($"  -> Points to: {instr.name} {string.Join(" ", instr.args)}");
+                    }
                 }
+                
+                Console.WriteLine("\nFull instruction listing with positions:");
+                for (int i = 0; i < Instructions.instructions.Count; i++)
+                {
+                    var instr = Instructions.instructions[i];
+                    Console.WriteLine($"{i}: {instr.name} {string.Join(" ", instr.args)}");
+                }
+                Console.WriteLine();
             }
             
             // Initialize memory if needed
