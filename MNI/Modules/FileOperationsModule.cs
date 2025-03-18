@@ -14,7 +14,9 @@ namespace SharpMASM.MNI.Modules
             {
                 // Get filename from memory
                 string filename = obj.readString(obj.arg1);
-                
+                Console.WriteLine(filename);
+                Console.WriteLine(obj.arg1);
+                Console.WriteLine(obj.arg2);
                 // Destination memory address
                 string destination = obj.arg2;
                 
@@ -58,6 +60,53 @@ namespace SharpMASM.MNI.Modules
             }
         }
         
+        // MNI function to write to a file with a start and end address in memory
+        [MNIFunction(name: "writeMemFile", module: "FileOperations")]
+        public static void WriteMemFile(MNIMethodObject obj)
+        {
+            try
+            {
+                // Get filename from memory
+                string filename = obj.readString(obj.arg1);
+
+                // Get start and end memory addresses
+                string start = obj.arg2;
+                string end = obj.arg3;
+
+                // Parse and validate memory range
+                long startAddress = obj.readInteger(start);
+                long endAddress = obj.readInteger(end);
+                if (startAddress > endAddress)
+                {
+                    throw new ArgumentException($"Invalid memory range: start ({startAddress}) is greater than end ({endAddress})");
+                }
+
+                // Read strings from memory
+                string content = string.Empty;
+                for (long address = startAddress; address <= endAddress; address += 8) // Assuming strings are stored in 8-byte blocks
+                {
+                    string data = obj.readString($"${address}");
+                    if (!string.IsNullOrEmpty(data))
+                    {
+                        content += data;
+                    }
+                }
+
+                // Debug: Log the final content
+                Console.WriteLine($"Final content to write: {content}");
+
+                // Write the content to the file
+                File.WriteAllText(filename, content);
+
+                // Set success flag
+                obj.setRegister("RFLAGS", 1);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error in WriteMemFile: {ex.Message}");
+                obj.setRegister("RFLAGS", 0);
+            }
+        }
         [MNIFunction(name: "fileExists", module: "FileOperations")]
         public static void FileExists(MNIMethodObject obj)
         {

@@ -476,16 +476,17 @@ namespace SharpMASM
             }
 
             // Check if the second argument is a string
-            if (arg2.StartsWith("\"") && arg2.EndsWith("\"") ||
-                arg2.StartsWith("'") && arg2.EndsWith("'"))
+            if ((arg2.StartsWith("\"") && arg2.EndsWith("\"")) || (arg2.StartsWith("'") && arg2.EndsWith("'")))
             {
                 // Remove the quotes
                 arg2 = arg2.Substring(1, arg2.Length - 2);
 
                 // Replace escape sequences
-                arg2 = arg2.Replace("\\n", "\n");
-                arg2 = arg2.Replace("\\r", "\r");
-                arg2 = arg2.Replace("\\t", "\t");
+                arg2 = arg2.Replace("\\n", "\n")
+                           .Replace("\\r", "\r")
+                           .Replace("\\t", "\t")
+                           .Replace("\\\"", "\"")
+                           .Replace("\\'", "'");
 
                 // Convert the memory address string to a numeric value
                 if (!long.TryParse(arg1.Substring(1), out long memoryAddress))

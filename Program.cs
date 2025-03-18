@@ -12,7 +12,7 @@ namespace SharpMASM
         /// </summary>
         /// <param name="args"></param>
         public static void Main(string[] args)
-        {
+        { 
             var cmdArgs = CmdArgs.Parse(args);
 
             if (cmdArgs.StartServer)

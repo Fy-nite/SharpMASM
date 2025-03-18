@@ -18,13 +18,17 @@ MNI IO.write 1 R1
 MNI IO.flush 1
 
 ; Write string to file
-MOV R1 3000  ; Filename
-MOV R2 4000  ; Content
+MOV R1 3000 
+ ; Filename
+MOV R2 4000 
+ ; Content
 MNI FileOperations.writeFile R1 R2
 
 ; Read file back
-MOV R1 3000  ; Filename
-MOV R2 5000  ; Destination
+MOV R1 3000
+  ; Filename
+MOV R2 5000 
+ ; Destination
 MNI FileOperations.readFile R1 R2
 
 ; Print file content to verify
@@ -36,6 +40,7 @@ MNI IO.flush 1
 MOV R1 4000
 MNI StringOperations.length R1 R4
 MOV R1 R4
-OUT 1 R1    ; Print the length
+OUT 1 R1 
+   ; Print the length
 
 HLT

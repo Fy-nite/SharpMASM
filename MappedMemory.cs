@@ -30,10 +30,10 @@ namespace SharpMASM
         // memory map a file to act as a long array
         public MappedMemoryFile(string filename)
         {
-            // Define a minimum size for the memory-mapped file (1MB should be plenty)
-            long minSize = 1024 * 1024; // 1MB
+            // Define a minimum size for the memory-mapped file (2MB to ensure enough space)
+            long minSize = 2 * 1024 * 1024; // 2MB
 
-            // open file and get its size
+            // Open file and get its size
             using (var fileStream = new FileStream(filename, FileMode.OpenOrCreate, FileAccess.ReadWrite))
             {
                 _fileSize = fileStream.Length;
@@ -44,7 +44,7 @@ namespace SharpMASM
                     _fileSize = minSize;
                 }
 
-                // Create a memory mapped file with the same size
+                // Create a memory-mapped file with the same size
                 _mappedFile = MemoryMappedFile.CreateFromFile(
                     fileStream,
                     null, // No name
@@ -168,72 +168,61 @@ namespace SharpMASM
 
         public void Write_String(string startingRegister, string value)
         {
-            if (Common.Registers.Contains(startingRegister))
-            {
-                long startingIndex = Array.IndexOf(Common.Registers, startingRegister);
-                for (int i = 0; i < value.Length; i++)
-                {
-                    Instance.WriteLong(startingIndex * sizeof(long) + i, value[i]);
-                }
-            }
-            else
-            {
-                throw new MASMException("Invalid register: " + startingRegister);
-            }
-        }
-        public string Read_String(string startingRegister)
-        {
-            // read a string from memory till the first 0 or \0, which ever we set for our null terminator
-            if (Common.Registers.Contains(startingRegister))
-            {
-                long startingIndex = Array.IndexOf(Common.Registers, startingRegister);
-                StringBuilder sb = new StringBuilder();
-                while (Instance.ReadLong(startingIndex * sizeof(long)) != 0)
-                {
-                    sb.Append((char)Instance.ReadLong(startingIndex * sizeof(long)));
-                    startingIndex++;
-                }
-                return sb.ToString();
-
-            }
-            // could not be a register and instead a number or memory address
-            else if (startingRegister.StartsWith("$"))
+            if (startingRegister.StartsWith("$"))
             {
                 // Parse memory address without the $ sign
                 if (long.TryParse(startingRegister.Substring(1), out long address))
                 {
-                    // Ensure address is valid (convert to byte position)
-                    long bytePosition = address * sizeof(long);
-                    if (bytePosition >= 0 && bytePosition < _fileSize)
+                    // Write each character of the string to memory
+                    for (int i = 0; i < value.Length; i++)
                     {
-                        StringBuilder sb = new StringBuilder();
-                        while (Instance.ReadLong(bytePosition) != 0)
-                        {
-                            sb.Append((char)Instance.ReadLong(bytePosition));
-                            bytePosition++;
-                        }
-                        return sb.ToString();
+                        WriteLong(address + i, value[i]);
                     }
-                    else
-                    {
-                        throw new MASMException($"Memory address out of range: {startingRegister} (byte position {bytePosition}, file size {_fileSize})");
-                    }
+
+                    // Add null terminator
+                    WriteLong(address + value.Length, 0);
                 }
                 else
                 {
                     throw new MASMException($"Invalid memory address format: {startingRegister}");
                 }
             }
-            else if (long.TryParse(startingRegister, out long value))
+            else
             {
-                return value.ToString();
+                throw new MASMException($"Invalid register or memory address: {startingRegister}");
+            }
+        }
+
+        public string Read_String(string startingRegister)
+        {
+            if (startingRegister.StartsWith("$"))
+            {
+                // Parse memory address without the $ sign
+                if (long.TryParse(startingRegister.Substring(1), out long address))
+                {
+                    StringBuilder sb = new StringBuilder();
+                    long currentAddress = address;
+
+                    // Read characters until null terminator is encountered
+                    while (true)
+                    {
+                        long charValue = ReadLong(currentAddress);
+                        if (charValue == 0) break; // Null terminator
+                        sb.Append((char)charValue);
+                        currentAddress++;
+                    }
+
+                    return sb.ToString();
+                }
+                else
+                {
+                    throw new MASMException($"Invalid memory address format: {startingRegister}");
+                }
             }
             else
             {
                 throw new MASMException($"Invalid register or memory address: {startingRegister}");
             }
-           
-            
         }
 
         // Indexer to use the file as an array
