@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace SharpMASM.Core
+namespace SharpMASM
 {
     public static class Includemanager
     {
@@ -30,15 +30,15 @@ namespace SharpMASM.Core
 
                 if (!File.Exists(fullPath))
                 {
-                    throw new SharpMASM.Core.Exceptions.MASMException($"Include file not found: {path}");
+                    throw new MASMException($"Include file not found: {path}");
                 }
 
                 Common.VerbosePrint($"Including file: {fullPath}");
                 return File.ReadAllText(fullPath);
             }
-            catch (Exception ex) when (!(ex is SharpMASM.Core.Exceptions.MASMException))
+            catch (Exception ex) when (!(ex is MASMException))
             {
-                throw new SharpMASM.Core.Exceptions.MASMException($"Error including file {path}: {ex.Message}");
+                throw new MASMException($"Error including file {path}: {ex.Message}");
             }
         }
     }

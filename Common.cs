@@ -15,11 +15,10 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.IO.MemoryMappedFiles;
-using SharpMASM.Internal;
-using static SharpMASM.Core.Core_Interpreter;
+using static SharpMASM.Core_Interpreter;
 
 
-namespace SharpMASM.Core
+namespace SharpMASM
 {
    
 
@@ -48,7 +47,11 @@ namespace SharpMASM.Core
         public static bool exitOnHLT = true;
 
         public static string[] Registers = new string[] { "RAX", "RBX", "RCX", "RDX", "RBP", "RSP", "RDI", "RSI", "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15" };
-        public static string[] Instructions = new string[] { "MOV", "ADD", "SUB", "MUL", "DIV", "AND", "OR", "XOR", "NOT", "SHL", "SHR", "CMP", "JMP", "JE", "JNE", "CALL", "RET", "HLT", "NOP", "PUSH", "POP", "INC", "DEC", "calle", "callne", "ENTER", "LEAVE" };
+        public static string[] Instructions = new string[] { 
+            "MOV", "ADD", "SUB", "MUL", "DIV", "JMP", "JZ", "JNZ", "JG", "JL", "JGE", "JLE",
+            "CMP", "CALL", "RET", "PUSH", "POP", "AND", "OR", "XOR", "NOT", "SHL", "SHR",
+            "INC", "DEC", "NEG", "NOP", "HLT", "INT", "IRET", "DB", "DW", "DD", "OUT", "MNI"
+        };
         public static string MappedFile = "FiniteSharpMasmMemory";
         public static MappedMemoryFile Memory = MappedMemoryFile.GetInstance(MappedFile);
         public static Dictionary<string, long> Labels = new Dictionary<string, long>();

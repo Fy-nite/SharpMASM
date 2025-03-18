@@ -1,13 +1,12 @@
-﻿using SharpMASM.Core.Exceptions;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using SharpMASM.Core;
-using static SharpMASM.Core.Core_Interpreter;
-namespace SharpMASM.Core
+using static SharpMASM.Core_Interpreter;
+
+namespace SharpMASM
 {
 
     /*
@@ -170,7 +169,7 @@ namespace SharpMASM.Core
             // Get the Instructions instance and clear existing instructions
             if (Common.InstructionInstance == null)
             {
-                Common.InstructionInstance = new Instructions();
+                Common.InstructionInstance = new Core_Interpreter.Instructions();
             }
             Instructions.ClearInstructions();
             
@@ -237,8 +236,8 @@ namespace SharpMASM.Core
                         string dataArg = restOfLine.Substring(firstSpace).Trim();
                         
                         // For quoted strings, we need to keep the entire string as one argument
-                        if ((dataArg.StartsWith("\"") && dataArg.EndsWith("\"")) || 
-                            (dataArg.StartsWith("'") && dataArg.EndsWith("'")))
+                        if (dataArg.StartsWith("\"") && dataArg.EndsWith("\"") || 
+                            dataArg.StartsWith("'") && dataArg.EndsWith("'"))
                         {
                             // This is a quoted string - keep it as is
                             args = new string[] { address, dataArg };
@@ -325,7 +324,7 @@ namespace SharpMASM.Core
             // Initialize memory if needed
             if (Common.Memory == null)
             {
-                Common.Memory = SharpMASM.Internal.MappedMemoryFile.GetInstance(Common.MappedFile);
+                Common.Memory = MappedMemoryFile.GetInstance(Common.MappedFile);
             }
             
             PrintAllInstructions(Instructions.instructions);

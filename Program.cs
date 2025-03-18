@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
-
-using SharpMASM.Core;
-using static SharpMASM.Core.Core_Interpreter;
+using static SharpMASM.Core_Interpreter;
 
 
 namespace SharpMASM
@@ -51,7 +49,7 @@ namespace SharpMASM
                     Common.InstructionInstance = new Instructions();
 
                     // Initialize the memory-mapped file
-                    Internal.MappedMemoryFile.GetInstance(Common.MappedFile);
+                    MappedMemoryFile.GetInstance(Common.MappedFile);
 
                     // Parse the instructions
                     Parsing.ParseInstructions(lines);
@@ -73,7 +71,7 @@ namespace SharpMASM
                 {
                     Console.WriteLine($"File not found: {CmdArgs.GetInstance().FileName}");
                 }
-                catch (Core.Exceptions.MASMException ex)
+                catch (MASMException ex)
                 {
                     // Exception handling is already done in the constructor
                     if (CmdArgs.GetInstance().VeryVerbose)

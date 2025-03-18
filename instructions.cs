@@ -1,12 +1,11 @@
-﻿using SharpMASM.Core.Exceptions;
-using SharpMASM.Internal;
+﻿using SharpMASM;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SharpMASM.Core
+namespace SharpMASM
 {
     public class Core_Interpreter
     {
@@ -130,6 +129,9 @@ namespace SharpMASM.Core
                     case "exit":
                         ExitProgram(i);
                         return;
+                    case "mni":
+                        Functions.MNI(i);
+                        break;
                     default:
                         Common.box("Error", "Unknown instruction: " + i.name, "error");
                         throw new MASMException("Unknown instruction: " + i.name);
@@ -314,7 +316,7 @@ namespace SharpMASM.Core
                 // Get exit code from register or literal
                 if (Common.Registers.Contains(i.args[0]))
                 {
-                    exitCode = (int)Internal.MappedMemoryFile.GetInstance(Common.MappedFile).Read(i.args[0]);
+                    exitCode = (int)MappedMemoryFile.GetInstance(Common.MappedFile).Read(i.args[0]);
                 }
                 else if (int.TryParse(i.args[0], out int code))
                 {

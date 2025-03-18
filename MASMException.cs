@@ -10,7 +10,7 @@ using SharpCommon;
  * Main Exception class that is thrown when an error occurs in the MASM code.
  */
 
-namespace SharpMASM.Core.Exceptions
+namespace SharpMASM
 {
     public class MASMException : Exception
     {

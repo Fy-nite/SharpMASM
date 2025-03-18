@@ -1,5 +1,4 @@
-﻿using SharpMASM.Core;
-using SharpMASM.Core.Exceptions;
+﻿using SharpMASM;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,7 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SharpMASM.Internal
+namespace SharpMASM
 {
     public class MappedMemoryFile : IDisposable
     {
@@ -92,6 +91,7 @@ namespace SharpMASM.Internal
         {
             return Instance.ReadLong(position);
         }
+   
 
         // Improve Read method to handle non-register cases better
         public long Read(string register)
