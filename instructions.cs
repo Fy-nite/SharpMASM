@@ -113,6 +113,9 @@ namespace SharpMASM
                     case "jl":
                         JumpIfLess(i);
                         break;
+                    case "jne":
+                        JumpIfNotEqual(i);
+                        break;
                     case "jmp":
                         Jump(i);
                         break;
@@ -248,6 +251,37 @@ namespace SharpMASM
             else
             {
                 throw new MASMException("JL argument must be a label (prefixed with #)");
+            }
+        }
+
+        private static void JumpIfNotEqual(instruction i)
+        {
+            if (i.args.Length < 1)
+            {
+                throw new MASMException("JNE requires a label argument");
+            }
+
+            if (i.args[0].StartsWith("#"))
+            {
+                string label = i.args[0].Substring(1);
+                
+                // Check if comparison result was "not equal"
+                if (!Functions.ComparisonFlags.IsEqual)
+                {
+                    if (Instructions.Labels.TryGetValue(label, out long position))
+                    {
+                        Instructions.GetInstance().instructionPointer = position;
+                    }
+                    else
+                    {
+                        throw new MASMException($"Label not found: {label}");
+                    }
+                }
+                // If equal, continue to next instruction
+            }
+            else
+            {
+                throw new MASMException("JNE argument must be a label (prefixed with #)");
             }
         }
 
