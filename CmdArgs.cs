@@ -19,7 +19,7 @@ public class CmdArgs
     [Option('V', "veryverbose", Required = false, HelpText = "Prints all messages to standard output. including internal debugging infomation that may or may not swear at you lol ")]
     public bool VeryVerbose { get; set; }
 
-    [Option('s', "start-server", Required = false, HelpText = "Starts the ASP.NET web server that hosts our documentation because i (charlie) am lazy to update the website after every new beta release")]
+    [Option('s', "start-server", Required = false, HelpText = "Starts the web server that hosts our documentation because i (charlie) am lazy to update the website after every new beta release")]
     public bool StartServer { get; set; }
 
     [Option('a', "use-arrays", Required = false, HelpText = "Uses built-in language arrays instead of memory-mapped files for memory operations. May improve performance or compatibility on some systems.")]
