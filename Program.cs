@@ -14,7 +14,9 @@ namespace SharpMASM
         public static void Main(string[] args)
         { 
             var cmdArgs = CmdArgs.Parse(args);
-
+                        Common.Memory = Common.InitializeMemory();
+            Functions.Long_memory = Common.Memory;
+            
             if (cmdArgs.StartServer)
             {
                 // Use SimpleHttpServer

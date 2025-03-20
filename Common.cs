@@ -53,7 +53,7 @@ namespace SharpMASM
             "INC", "DEC", "NEG", "NOP", "HLT", "INT", "IRET", "DB", "DW", "DD", "OUT", "MNI"
         };
         public static string MappedFile = "FiniteSharpMasmMemory";
-        public static MappedMemoryFile Memory = MappedMemoryFile.GetInstance(MappedFile);
+        public static IMemoryManager Memory;
         public static Dictionary<string, long> Labels = new Dictionary<string, long>();
         public static List<instruction> instructions = new List<instruction>();
         public static Instructions? InstructionInstance { get; set; }
@@ -66,8 +66,29 @@ namespace SharpMASM
             instructions.Add(new instruction(name, args));
         }
 
-
-
+        public static IMemoryManager InitializeMemory()
+        {
+            Console.WriteLine($"DEBUG: UseBuiltInArrays is set to: {CmdArgs.GetInstance().UseBuiltInArrays}");
+            
+            if (CmdArgs.GetInstance().UseBuiltInArrays)
+            {
+                Console.WriteLine("DEBUG: Selecting array-based memory implementation");
+                if (CmdArgs.GetInstance().Verbose || CmdArgs.GetInstance().VeryVerbose)
+                {
+                    Console.WriteLine("Using array-based memory implementation");
+                }
+                return ArrayMemoryManager.GetInstance(MappedFile);
+            }
+            else
+            {
+                Console.WriteLine("DEBUG: Selecting memory-mapped file implementation");
+                if (CmdArgs.GetInstance().Verbose || CmdArgs.GetInstance().VeryVerbose)
+                {
+                    Console.WriteLine("Using memory-mapped file implementation");
+                }
+                return MappedMemoryFile.GetInstance(MappedFile);
+            }
+        }
 
         /// <summary>
         /// VerbosePrint

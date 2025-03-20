@@ -39,7 +39,14 @@ namespace SharpMASM
          * you can also move memory addresses to registers.
          * mov RAX $100, this will move the value at memory address 100 to RAX.
          */
-        public static MappedMemoryFile Long_memory = MappedMemoryFile.GetInstance(Common.MappedFile);
+        // Replace the direct reference to MappedMemoryFile with the interface
+        public static IMemoryManager Long_memory;
+
+        // Add a method to initialize the memory manager
+        public static void InitializeMemory()
+        {
+            Long_memory = Common.InitializeMemory();
+        }
 
         // Add comparison flags to track comparison results
         public static class ComparisonFlags

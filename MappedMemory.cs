@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace SharpMASM
 {
-    public class MappedMemoryFile : IDisposable
+    public class MappedMemoryFile : IMemoryManager
     {
         private MemoryMappedFile _mappedFile;
         private MemoryMappedViewAccessor _accessor;
@@ -84,12 +84,20 @@ namespace SharpMASM
 
         public static void WriteMemory(long position, long value)
         {
-            Instance.WriteLong(position, value);
+            // Change to use Common.Memory instead of direct Instance
+            if (Common.Memory is MappedMemoryFile)
+                ((MappedMemoryFile)Common.Memory).WriteLong(position, value);
+            else
+                Common.Memory.WriteLong(position, value);
         }
 
         public static long ReadMemory(long position)
         {
-            return Instance.ReadLong(position);
+            // Change to use Common.Memory instead of direct Instance
+            if (Common.Memory is MappedMemoryFile)
+                return ((MappedMemoryFile)Common.Memory).ReadLong(position);
+            else
+                return Common.Memory.ReadLong(position);
         }
    
 
@@ -98,7 +106,8 @@ namespace SharpMASM
         {
             if (Common.Registers.Contains(register))
             {
-                return Instance.ReadLong(Array.IndexOf(Common.Registers, register) * sizeof(long));
+                // Use this instead of Instance
+                return this.ReadLong(Array.IndexOf(Common.Registers, register) * sizeof(long));
             }
             else if (register.StartsWith("$"))
             {
@@ -109,7 +118,8 @@ namespace SharpMASM
                     long bytePosition = address * sizeof(long);
                     if (bytePosition >= 0 && bytePosition < _fileSize)
                     {
-                        return Instance.ReadLong(bytePosition);
+                        // Use this instead of Instance
+                        return this.ReadLong(bytePosition);
                     }
                     else
                     {
@@ -137,7 +147,8 @@ namespace SharpMASM
             if (Common.Registers.Contains(register))
             {
                 long position = Array.IndexOf(Common.Registers, register) * sizeof(long);
-                Instance.WriteLong(position, value);
+                // Use this instead of Instance
+                this.WriteLong(position, value);
             }
             else if (register.StartsWith("$"))
             {
@@ -148,7 +159,8 @@ namespace SharpMASM
                     long bytePosition = address * sizeof(long);
                     if (bytePosition >= 0 && bytePosition < _fileSize)
                     {
-                        Instance.WriteLong(bytePosition, value);
+                        // Use this instead of Instance
+                        this.WriteLong(bytePosition, value);
                     }
                     else
                     {
