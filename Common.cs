@@ -68,20 +68,18 @@ namespace SharpMASM
 
         public static IMemoryManager InitializeMemory()
         {
-            Console.WriteLine($"DEBUG: UseBuiltInArrays is set to: {CmdArgs.GetInstance().UseBuiltInArrays}");
+            Console.WriteLine($"Memory initialization: UseBuiltInArrays flag is set to: {CmdArgs.GetInstance().UseBuiltInArrays}");
             
             if (CmdArgs.GetInstance().UseBuiltInArrays)
             {
-                Console.WriteLine("DEBUG: Selecting array-based memory implementation");
                 if (CmdArgs.GetInstance().Verbose || CmdArgs.GetInstance().VeryVerbose)
                 {
                     Console.WriteLine("Using array-based memory implementation");
                 }
-                return ArrayMemoryManager.GetInstance(MappedFile);
+                return ArrayMemoryManager.GetInstance(null); // Pass null instead of MappedFile
             }
             else
             {
-                Console.WriteLine("DEBUG: Selecting memory-mapped file implementation");
                 if (CmdArgs.GetInstance().Verbose || CmdArgs.GetInstance().VeryVerbose)
                 {
                     Console.WriteLine("Using memory-mapped file implementation");

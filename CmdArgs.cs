@@ -32,14 +32,18 @@ public class CmdArgs
         var result = new CmdArgs();
         
         // Handle the case where the first argument might be the filename without a flag
-        if (args.Length == 1 && !args[0].StartsWith("-"))
+        if (args.Length == 1 && !args[0].StartsWith("-") && !args[0].StartsWith("/"))
         {
             result.FileName = args[0];
+            // Set Instance here so it's immediately available
+            Instance = result;
             return result;
         }
         else if (args.Length == 0)
         {
             result.FileName = "main.masm";
+            // Set Instance here so it's immediately available
+            Instance = result;
             return result;
         }
         
@@ -58,6 +62,15 @@ public class CmdArgs
                 result.FileName = "main.masm";
             });
             
+        // Make sure to set the Instance here to ensure all flags are captured
+        Instance = result;
+        
+        // Add debug output to verify flags
+        if (result.Verbose || result.VeryVerbose)
+        {
+            Console.WriteLine($"Command line arguments: FileNAme={result.FileName}, UseBuiltInArrays={result.UseBuiltInArrays}");
+        }
+        
         return result;
     }
 

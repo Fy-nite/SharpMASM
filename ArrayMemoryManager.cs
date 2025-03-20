@@ -8,30 +8,29 @@ namespace SharpMASM
     /// </summary>
     public class ArrayMemoryManager : IMemoryManager
     {
-        private readonly long[] _memory;
-        private readonly long _size;
+        private static ArrayMemoryManager? _instance;
+        private long[] _memory;
+        private long _size;
         private bool _disposed = false;
-        
-        public static ArrayMemoryManager? Instance { get; set; }
-        
-        public static ArrayMemoryManager GetInstance(string _)
+
+        private ArrayMemoryManager(string? mappedFile)
         {
-            if (Instance == null)
-            {
-                Instance = new ArrayMemoryManager();
-            }
-            return Instance;
-        }
-        
-        public ArrayMemoryManager(long sizeInBytes = 64 * 1024 * 1024) // Default 64MB like the mapped file
-        {
-            _size = sizeInBytes / sizeof(long);
+            // Initialize with default memory size
+            _size = (long)Common.MemorySize / sizeof(long);
             _memory = new long[_size];
-            
-            if (CmdArgs.GetInstance().VeryVerbose)
+            if (CmdArgs.GetInstance().Verbose || CmdArgs.GetInstance().VeryVerbose)
             {
-                Console.WriteLine($"Array-based memory initialized with size: {sizeInBytes} bytes ({_size} longs)");
+                Console.WriteLine($"Initialized ArrayMemoryManager with {_size} elements");
             }
+        }
+
+        public static ArrayMemoryManager GetInstance(string? mappedFile)
+        {
+            if (_instance == null)
+            {
+                _instance = new ArrayMemoryManager(mappedFile);
+            }
+            return _instance;
         }
         
         public long ReadLong(long position)

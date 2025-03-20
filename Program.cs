@@ -13,21 +13,29 @@ namespace SharpMASM
         /// <param name="args"></param>
         public static void Main(string[] args)
         { 
-            var cmdArgs = CmdArgs.Parse(args);
-                        Common.Memory = Common.InitializeMemory();
+            // Parse command line arguments first
+            CmdArgs cmdArgs = CmdArgs.Parse(args);
+
+            // Explicitly set the instance to make sure it's available
+            CmdArgs.Instance = cmdArgs;
+
+            // Print command line arguments if in verbose mode
+            if (cmdArgs.Verbose || cmdArgs.VeryVerbose)
+            {
+                Console.WriteLine($"Command line arguments: UseBuiltInArrays={cmdArgs.UseBuiltInArrays}");
+            }
+
+            // Initialize memory only once based on command-line arguments
+            Common.Memory = Common.InitializeMemory();
             Functions.Long_memory = Common.Memory;
             
             if (cmdArgs.StartServer)
             {
                 // Use SimpleHttpServer
                 StartSimpleServer();
-
             }
             else
             {
-                // Parse command line arguments
-                CmdArgs.Instance = CmdArgs.Parse(args);
-
                 // Check if a file was specified
                 if (string.IsNullOrEmpty(CmdArgs.GetInstance().FileName))
                 {
@@ -50,9 +58,6 @@ namespace SharpMASM
                     Common.Instance = new Common();
                     Common.InstructionInstance = new Instructions();
 
-                    // Initialize the memory-mapped file
-                    MappedMemoryFile.GetInstance(Common.MappedFile);
-
                     // Parse the instructions
                     Parsing.ParseInstructions(lines);
 
@@ -67,7 +72,6 @@ namespace SharpMASM
                     // Execute the program - instruction pointer is reset within Interpret method
                     Console.WriteLine("Program loaded successfully.");
                     Interpret(Instructions.GetInstance());
-
                 }
                 catch (FileNotFoundException)
                 {
