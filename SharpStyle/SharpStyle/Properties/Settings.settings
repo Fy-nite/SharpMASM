@@ -1,0 +1,12 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="SharpCommon.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="Finite_Site" Type="(Web Service URL)" Scope="Application">
+      <Value Profile="(Default)">https://fy-nite.vercel.app</Value>
+    </Setting>
+    <Setting Name="latest_download" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://fy-nite.vercel.app/downloads/latest</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
