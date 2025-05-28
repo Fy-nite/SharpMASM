@@ -1,5 +1,0 @@
-lbl main
-	inc RAX 
-	out 1 RAX
-	cout 1 10
-	jmp #main

@@ -7,14 +7,15 @@ namespace SharpMASM
 {
     public class Entry
     { 
+        public static CmdArgs cmdArgs { get; private set; } = new CmdArgs();
         /// <summary>
         /// Main entry point for the application
         /// </summary>
         /// <param name="args"></param>
         public static void Main(string[] args)
-        { 
+        {
             // Parse command line arguments first
-            CmdArgs cmdArgs = CmdArgs.Parse(args);
+            cmdArgs = CmdArgs.Parse(args);
 
             // Explicitly set the instance to make sure it's available
             CmdArgs.Instance = cmdArgs;
@@ -28,7 +29,7 @@ namespace SharpMASM
             // Initialize memory only once based on command-line arguments
             Common.Memory = Common.InitializeMemory();
             Functions.Long_memory = Common.Memory;
-            
+
             if (cmdArgs.StartServer)
             {
                 // Use SimpleHttpServer
