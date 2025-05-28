@@ -23,10 +23,6 @@
   <ItemGroup>
     <Folder Include="root\libs\" />
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="SharpStyle">
-      <HintPath>root\libs\SharpStyle.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+
 
 </Project>
